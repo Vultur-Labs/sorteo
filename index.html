@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruleta de Sorteo</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #22223a;
+      --border: #2e2e4a;
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --text: #e8e8f0;
+      --muted: #888;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a855f7, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    /* Panel izquierdo */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Carga CSV */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--accent2);
+      background: rgba(124, 58, 237, 0.08);
+    }
+
+    .upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+
+    .upload-area p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .upload-area strong { color: var(--accent2); }
+
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      margin-top: 8px;
+    }
+
+    .download-link:hover { text-decoration: underline; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Input manual */
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input:focus { border-color: var(--accent2); }
+
+    .input-row input::placeholder { color: var(--muted); }
+
+    .weight-input {
+      width: 70px !important;
+      flex: none !important;
+      text-align: center;
+    }
+
+    .input-row label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .input-group-sm {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 70px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: white;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      align-self: flex-end;
+    }
+
+    .btn-add:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-clear:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Tags participantes */
+    .participants-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .count-badge {
+      background: var(--accent);
+      color: white;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .tags-container::-webkit-scrollbar { width: 4px; }
+    .tags-container::-webkit-scrollbar-track { background: transparent; }
+    .tags-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 20px;
+      padding: 4px 10px 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: default;
+      transition: transform 0.15s;
+      user-select: none;
+    }
+
+    .tag:hover { transform: scale(1.05); }
+
+    .tag-weight {
+      opacity: 0.75;
+      font-size: 0.7rem;
+      font-weight: 400;
+    }
+
+    .tag-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      opacity: 0.6;
+      font-size: 0.9rem;
+      color: inherit;
+    }
+
+    .tag-remove:hover { opacity: 1; }
+
+    .empty-msg {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 12px;
+      width: 100%;
+    }
+
+    /* Panel ruleta */
+    .wheel-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: min(460px, 100%);
+      aspect-ratio: 1;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: 50%;
+      right: -12px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-right: 32px solid white;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.5));
+      z-index: 10;
+    }
+
+    .wheel-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background: #fff;
+      border-radius: 50%;
+      z-index: 10;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    canvas#wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* Botón sortear */
+    .btn-sortear {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+      padding: 16px 48px;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      border-radius: 50px;
+      box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-sortear:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.6);
+    }
+
+    .btn-sortear:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Winner modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      transform: scale(0.8);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+
+    .winner-emoji { font-size: 4rem; margin-bottom: 12px; }
+
+    .winner-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .winner-name {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      line-height: 1.1;
+    }
+
+    .btn-close {
+      background: var(--accent);
+      color: white;
+      padding: 12px 32px;
+      font-size: 1rem;
+      border-radius: 50px;
+    }
+
+    .btn-close:hover { background: var(--accent2); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #ef4444;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: transform 0.3s;
+      z-index: 200;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎡 Ruleta de Sorteo</h1>
+<p class="subtitle">Cargá participantes y girá la ruleta para elegir al ganador</p>
+
+<div class="container">
+  <!-- Panel izquierdo -->
+  <div class="panel">
+    <span class="panel-title">Participantes</span>
+
+    <!-- Carga CSV -->
+    <div>
+      <div class="upload-area" id="dropZone">
+        <input type="file" accept=".csv" id="csvInput" />
+        <div class="upload-icon">📂</div>
+        <p><strong>Arrastrá un CSV</strong> o hacé click para seleccionar</p>
+        <p>Columnas: <code style="color: var(--accent2)">nombre, peso</code></p>
+      </div>
+      <div style="text-align:center; margin-top:8px;">
+        <button class="download-link" onclick="downloadExampleCSV()">
+          ⬇ Descargar ejemplo CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="divider">o ingresá manualmente</div>
+
+    <!-- Input manual -->
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Nombre</label>
+          <input type="text" id="nameInput" placeholder="Ej: María García" />
+        </div>
+        <div class="input-group-sm">
+          <label>Peso</label>
+          <input type="number" id="weightInput" class="weight-input" placeholder="1" min="1" max="100" value="1" />
+        </div>
+        <button class="btn btn-add" onclick="addParticipant()" style="align-self:flex-end; flex-shrink:0;">+ Agregar</button>
+      </div>
+    </div>
+
+    <!-- Lista de participantes -->
+    <div>
+      <div class="participants-header">
+        <span class="panel-title">Lista</span>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="count-badge" id="countBadge">0</span>
+          <button class="btn btn-clear" onclick="clearAll()">Limpiar todo</button>
+        </div>
+      </div>
+      <div class="tags-container" id="tagsContainer">
+        <span class="empty-msg">Sin participantes aún</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel ruleta -->
+  <div class="wheel-panel">
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer"></div>
+      <canvas id="wheel" width="460" height="460"></canvas>
+      <div class="wheel-center"></div>
+    </div>
+    <button class="btn btn-sortear" id="btnSortear" onclick="spin()" disabled>
+      🎯 SORTEAR
+    </button>
+  </div>
+</div>
+
+<!-- Modal ganador -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="winner-emoji">🏆</div>
+    <div class="winner-label">¡Ganador!</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <button class="btn btn-close" onclick="closeModal()">Cerrar</button>
+  </div>
+</div>
+
+<!-- Toast error -->
+<div class="toast" id="toast"></div>
+
+<!-- Confetti -->
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+// ─── Estado ───────────────────────────────────────────────────
+let participants = []; // { name, weight, color }
+let spinning = false;
+let currentAngle = 0;
+
+const COLORS = [
+  ['#7c3aed','#fff'], ['#2563eb','#fff'], ['#059669','#fff'],
+  ['#d97706','#fff'], ['#dc2626','#fff'], ['#7c3aed','#fff'],
+  ['#0891b2','#fff'], ['#9333ea','#fff'], ['#16a34a','#fff'],
+  ['#ea580c','#fff'], ['#be123c','#fff'], ['#0369a1','#fff'],
+  ['#15803d','#fff'], ['#b45309','#fff'], ['#6d28d9','#fff'],
+  ['#1d4ed8','#fff'], ['#047857','#fff'], ['#c2410c','#fff'],
+];
+
+function getColor(index) {
+  return COLORS[index % COLORS.length];
+}
+
+// ─── Participantes ─────────────────────────────────────────────
+function normalizeKey(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function addParticipant(name, weight) {
+  if (name === undefined) {
+    name = document.getElementById('nameInput').value.trim();
+    weight = parseInt(document.getElementById('weightInput').value) || 1;
+  }
+  if (!name) { showToast('Ingresá un nombre'); return; }
+  weight = Math.max(1, Math.min(100, parseInt(weight) || 1));
+
+  const key = normalizeKey(name);
+  if (participants.some(p => normalizeKey(p.name) === key)) {
+    showToast(`"${name}" ya está en la lista`);
+    return;
+  }
+
+  const colorIndex = participants.length;
+  const [bg, fg] = getColor(colorIndex);
+  participants.push({ name: name.trim(), weight, color: bg, textColor: fg });
+
+  document.getElementById('nameInput').value = '';
+  document.getElementById('weightInput').value = '1';
+  renderTags();
+  drawWheel();
+}
+
+function removeParticipant(index) {
+  participants.splice(index, 1);
+  // Reasignar colores
+  participants.forEach((p, i) => {
+    const [bg, fg] = getColor(i);
+    p.color = bg;
+    p.textColor = fg;
+  });
+  renderTags();
+  drawWheel();
+}
+
+function clearAll() {
+  participants = [];
+  renderTags();
+  drawWheel();
+}
+
+function renderTags() {
+  const container = document.getElementById('tagsContainer');
+  const badge = document.getElementById('countBadge');
+  const btn = document.getElementById('btnSortear');
+
+  badge.textContent = participants.length;
+  btn.disabled = participants.length < 2;
+
+  if (participants.length === 0) {
+    container.innerHTML = '<span class="empty-msg">Sin participantes aún</span>';
+    return;
+  }
+
+  container.innerHTML = participants.map((p, i) => `
+    <span class="tag" style="background:${p.color}; color:${p.textColor};">
+      ${escapeHtml(p.name)}
+      ${p.weight > 1 ? `<span class="tag-weight">(x${p.weight})</span>` : ''}
+      <button class="tag-remove" onclick="removeParticipant(${i})" title="Eliminar">×</button>
+    </span>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── CSV ───────────────────────────────────────────────────────
+document.getElementById('csvInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) readCSV(file);
+  this.value = '';
+});
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.csv')) readCSV(file);
+});
+
+function readCSV(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { showToast('El CSV está vacío o sin datos'); return; }
+
+    let added = 0, skipped = 0;
+    // Detectar header
+    const firstLine = lines[0].toLowerCase();
+    const startIdx = (firstLine.includes('nombre') || firstLine.includes('name')) ? 1 : 0;
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+      const name = cols[0];
+      const weight = parseInt(cols[1]) || 1;
+      if (!name) continue;
+
+      const key = normalizeKey(name);
+      if (participants.some(p => normalizeKey(p.name) === key)) {
+        skipped++;
+        continue;
+      }
+      const colorIndex = participants.length;
+      const [bg, fg] = getColor(colorIndex);
+      participants.push({ name, weight, color: bg, textColor: fg });
+      added++;
+    }
+
+    renderTags();
+    drawWheel();
+    if (skipped > 0) showToast(`${added} agregados, ${skipped} duplicados ignorados`, '#059669');
+  };
+  reader.readAsText(file);
+}
+
+function downloadExampleCSV() {
+  const content = 'nombre,peso\nMaría García,1\nJuan Pérez,2\nLaura Martínez,1\nCarlos López,3\nSofía Rodríguez,1';
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ejemplo_participantes.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Ruleta Canvas ─────────────────────────────────────────────
+function drawWheel() {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2, r = W / 2 - 4;
+
+  ctx.clearRect(0, 0, W, H);
+
+  if (participants.length === 0) {
+    ctx.fillStyle = '#1a1a24';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#444';
+    ctx.font = 'bold 18px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Agregá participantes', cx, cy);
+    return;
+  }
+
+  // Construir segmentos ponderados
+  const total = participants.reduce((s, p) => s + p.weight, 0);
+  let startAngle = currentAngle;
+
+  participants.forEach((p, i) => {
+    const slice = (p.weight / total) * Math.PI * 2;
+    const endAngle = startAngle + slice;
+    const mid = startAngle + slice / 2;
+
+    // Sector
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.strokeStyle = '#0f0f13';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Texto
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(mid);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    const textR = r - 12;
+    const maxLen = textR - 20;
+    let label = p.name;
+    ctx.font = `bold ${getFontSize(p, total)}px Segoe UI`;
+    ctx.fillStyle = p.textColor;
+
+    // Truncar si es necesario
+    while (ctx.measureText(label).width > maxLen && label.length > 1) {
+      label = label.slice(0, -1);
+    }
+    if (label !== p.name) label += '…';
+
+    ctx.fillText(label, textR, 0);
+    ctx.restore();
+
+    startAngle = endAngle;
+  });
+
+  // Borde exterior
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#2e2e4a';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+}
+
+function getFontSize(p, total) {
+  const ratio = p.weight / total;
+  const base = ratio * participants.length;
+  if (base > 0.5) return 14;
+  if (base > 0.2) return 12;
+  return 10;
+}
+
+// ─── Animación de giro ─────────────────────────────────────────
+function spin() {
+  if (spinning || participants.length < 2) return;
+  spinning = true;
+  document.getElementById('btnSortear').disabled = true;
+
+  // Seleccionar ganador ponderado
+  const winner = pickWeightedWinner();
+
+  // Calcular ángulo destino para que el puntero apunte al ganador
+  const total = participants.reduce((s, p) => s + p.weight, 0);
+  let winnerStart = 0;
+  for (let i = 0; i < winner.index; i++) {
+    winnerStart += (participants[i].weight / total) * Math.PI * 2;
+  }
+  const winnerEnd = winnerStart + (winner.weight / total) * Math.PI * 2;
+  const winnerMid = winnerStart + (winner.weight / total) * Math.PI;
+
+  const startAngle = currentAngle % (Math.PI * 2);
+  currentAngle = startAngle; // normalizar para evitar acumulación de flotantes
+
+  // Para que el puntero (ángulo 0) quede sobre winnerMid:
+  // currentAngle_final mod 2π debe ser (2π - winnerMid) mod 2π
+  // => targetAngle = fullSpins - winnerMid - startAngle
+  const fullSpins = (Math.PI * 2) * (5 + Math.floor(Math.random() * 5));
+  const targetAngle = fullSpins - winnerMid - startAngle + (Math.random() - 0.5) * (winner.weight / total) * Math.PI * 0.8;
+  const duration = 4000 + Math.random() * 2000;
+  const startTime = performance.now();
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = easeOutCubic(t);
+    currentAngle = startAngle + targetAngle * eased;
+    drawWheel();
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      document.getElementById('btnSortear').disabled = false;
+      showWinner(winner);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 4);
+}
+
+function pickWeightedWinner() {
+  const total = participants.reduce((s, p) => s + p.weight, 0);
+  let rand = Math.random() * total;
+  for (let i = 0; i < participants.length; i++) {
+    rand -= participants[i].weight;
+    if (rand <= 0) return { ...participants[i], index: i };
+  }
+  return { ...participants[participants.length - 1], index: participants.length - 1 };
+}
+
+// ─── Ganador ──────────────────────────────────────────────────
+function showWinner(winner) {
+  document.getElementById('winnerName').textContent = winner.name;
+  document.getElementById('winnerName').style.color = winner.color;
+  document.getElementById('modalOverlay').classList.add('show');
+  launchConfetti();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  stopConfetti();
+}
+
+// ─── Confetti + Fuegos artificiales ───────────────────────────
+const PARTY_COLORS = ['#7c3aed','#a855f7','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#22d3ee','#facc15'];
+
+let confettiParticles = [];
+let fireworks = [];
+let confettiRAF = null;
+let partyRunning = false;
+
+// Formas de papelito
+const SHAPES = ['rect', 'circle', 'ribbon'];
+
+function randColor() { return PARTY_COLORS[Math.floor(Math.random() * PARTY_COLORS.length)]; }
+function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+function makeConfetti(canvas) {
+  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+  return {
+    type: 'confetti',
+    x: randBetween(0, canvas.width),
+    y: randBetween(-200, -10),
+    w: shape === 'ribbon' ? randBetween(3, 6) : randBetween(7, 14),
+    h: shape === 'ribbon' ? randBetween(18, 30) : randBetween(7, 14),
+    color: randColor(),
+    shape,
+    vx: randBetween(-1.5, 1.5),
+    vy: randBetween(2, 5),
+    angle: randBetween(0, Math.PI * 2),
+    spin: randBetween(-0.12, 0.12),
+    wobble: randBetween(0, Math.PI * 2),
+    wobbleSpeed: randBetween(0.05, 0.15),
+    alpha: 1,
+  };
+}
+
+function makeFirework(canvas) {
+  return {
+    type: 'firework',
+    x: randBetween(canvas.width * 0.15, canvas.width * 0.85),
+    y: canvas.height,
+    targetY: randBetween(canvas.height * 0.1, canvas.height * 0.45),
+    vy: -randBetween(12, 20),
+    color: randColor(),
+    exploded: false,
+    particles: [],
+  };
+}
+
+function explodeFirework(fw) {
+  const count = 60 + Math.floor(Math.random() * 40);
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 / count) * i + randBetween(-0.1, 0.1);
+    const speed = randBetween(2, 8);
+    fw.particles.push({
+      x: fw.x, y: fw.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      alpha: 1,
+      color: Math.random() < 0.3 ? randColor() : fw.color,
+      r: randBetween(1.5, 3.5),
+      trail: [],
+    });
+  }
+  fw.exploded = true;
+}
+
+function launchConfetti() {
+  stopConfetti();
+  partyRunning = true;
+
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  // Papelitos iniciales
+  confettiParticles = Array.from({ length: 180 }, () => makeConfetti(canvas));
+
+  // Fuegos artificiales iniciales: 3 ráfagas
+  fireworks = [];
+  for (let i = 0; i < 4; i++) {
+    setTimeout(() => {
+      if (partyRunning) fireworks.push(makeFirework(canvas));
+    }, i * 350);
+  }
+
+  // Fuegos periódicos
+  const fwInterval = setInterval(() => {
+    if (!partyRunning) { clearInterval(fwInterval); return; }
+    fireworks.push(makeFirework(canvas));
+  }, 900);
+
+  function draw() {
+    if (!partyRunning) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // ── Fuegos artificiales ──
+    fireworks.forEach((fw, fi) => {
+      if (!fw.exploded) {
+        fw.y += fw.vy;
+        fw.vy *= 0.97;
+
+        // Estela del cohete
+        ctx.beginPath();
+        ctx.arc(fw.x, fw.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = fw.color;
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        if (fw.y <= fw.targetY) explodeFirework(fw);
+      } else {
+        fw.particles = fw.particles.filter(p => p.alpha > 0.02);
+        fw.particles.forEach(p => {
+          p.trail.push({ x: p.x, y: p.y });
+          if (p.trail.length > 5) p.trail.shift();
+
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.12; // gravedad
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+          p.alpha -= 0.022;
+
+          // Estela
+          for (let t = 0; t < p.trail.length; t++) {
+            const tr = p.trail[t];
+            ctx.beginPath();
+            ctx.arc(tr.x, tr.y, p.r * (t / p.trail.length), 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha * (t / p.trail.length) * 0.5;
+            ctx.fill();
+          }
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+      }
+    });
+    // Limpiar fuegos terminados
+    fireworks = fireworks.filter(fw => !fw.exploded || fw.particles.length > 0);
+
+    // ── Papelitos ──
+    confettiParticles.forEach(p => {
+      p.wobble += p.wobbleSpeed;
+      p.x += p.vx + Math.sin(p.wobble) * 0.8;
+      p.y += p.vy;
+      p.angle += p.spin;
+      p.vy = Math.min(p.vy + 0.05, 8); // gravedad suave
+
+      if (p.y > canvas.height + 30) {
+        // Reutilizar desde arriba
+        Object.assign(p, makeConfetti(canvas));
+        p.y = randBetween(-40, -10);
+      }
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.w / 2, p.h / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.shape === 'ribbon') {
+        // Ribbon ondulado con scaleX pulsante
+        const scaleX = Math.abs(Math.cos(p.wobble));
+        ctx.scale(scaleX + 0.1, 1);
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      } else {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    });
+
+    confettiRAF = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopConfetti() {
+  partyRunning = false;
+  cancelAnimationFrame(confettiRAF);
+  confettiRAF = null;
+  fireworks = [];
+  confettiParticles = [];
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(msg, bg = '#ef4444') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = bg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── Input con Enter ──────────────────────────────────────────
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addParticipant();
+});
+document.getElementById('weightInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addParticipant();
+});
+
+// ─── Init ─────────────────────────────────────────────────────
+drawWheel();
+</script>
+</body>
+</html>
